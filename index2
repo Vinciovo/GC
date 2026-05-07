@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>档案更新详情</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+    .header {
+      background: #fff;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e4e7ed;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      cursor: pointer;
+      font-size: 16px;
+      color: #606266;
+    }
+    .project-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
+    }
+    .status-tag {
+      background: #E8F5E9;
+      color: #67C23A;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    .container {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .right-panel {
+      width: 400px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 3px solid #FF6B35;
+    }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .info-table th, .info-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #f2f6fc;
+    }
+    .info-table th {
+      width: 120px;
+      font-weight: 500;
+      color: #909399;
+      font-size: 14px;
+    }
+    .info-table td {
+      color: #303133;
+      font-size: 14px;
+    }
+    .attachment-list {
+      list-style: none;
+    }
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      color: #409EFF;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .attachment-item:hover {
+      text-decoration: underline;
+    }
+    .compare-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e4e7ed;
+    }
+    .tab-item {
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #606266;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    .tab-item.active {
+      color: #FF6B35;
+      border-bottom-color: #FF6B35;
+      font-weight: 500;
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .compare-table th, .compare-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f2f6fc;
+    }
+    .compare-table th {
+      background: #fafafa;
+      font-weight: 500;
+      color: #606266;
+    }
+    .diff-increase {
+      color: #67C23A;
+      font-weight: 500;
+    }
+    .diff-decrease {
+      color: #F56C6C;
+      font-weight: 500;
+    }
+    .diff-highlight {
+      background: #FFF7E6;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e4e7ed;
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 24px;
+    }
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #FF6B35;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px #FFE4D0;
+    }
+    .timeline-item.done::before {
+      background: #67C23A;
+      box-shadow: 0 0 0 2px #E8F5E9;
+    }
+    .timeline-item.pending::before {
+      background: #E6A23C;
+      box-shadow: 0 0 0 2px #FDF6EC;
+    }
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #303133;
+      margin-bottom: 4px;
+    }
+    .timeline-desc {
+      font-size: 12px;
+      color: #909399;
+      margin-bottom: 2px;
+    }
+    .timeline-time {
+      font-size: 12px;
+      color: #C0C4CC;
+    }
+    .empty-text {
+      color: #909399;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div class="header-left">
+        <span class="back-btn" @click="goBack">← 返回列表</span>
+        <h1 class="project-name">{{ detailData.projectName }}</h1>
+        <span class="status-tag">{{ detailData.status }}</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="left-panel">
+        <div class="card">
+          <div class="card-title">📋 基础信息</div>
+          <table class="info-table">
+            <tr>
+              <th>提交人</th>
+              <td>{{ detailData.basicInfo.submitter }}</td>
+            </tr>
+            <tr>
+              <th>工程节点</th>
+              <td>{{ detailData.basicInfo.engineeringNode }}</td>
+            </tr>
+            <tr>
+              <th>修改原因</th>
+              <td style="max-width: 500px;">{{ detailData.basicInfo.reason }}</td>
+            </tr>
+            <tr>
+              <th>附件</th>
+              <td>
+                <ul class="attachment-list">
+                  <li v-for="(file, index) in detailData.basicInfo.attachments" :key="index" class="attachment-item">
+                    📎 {{ file.name }}
+                  </li>
+                  <li v-if="detailData.basicInfo.attachments.length === 0" class="empty-text">暂无附件</li>
+                </ul>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 档案记录</div>
+          <div class="compare-tabs">
+            <div 
+              v-for="tab in compareTabs" 
+              :key="tab.key" 
+              :class="['tab-item', { active: activeTab === tab.key }]"
+              @click="activeTab = tab.key"
+            >
+              {{ tab.label }}
+            </div>
+          </div>
+
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>信息对比</th>
+                <th>变更后</th>
+                <th>原数据</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="activeTab === 'space'">
+                <tr v-for="(item, index) in spaceDataFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+              </template>
+              <template v-else-if="activeTab === 'drawing'">
+                <tr v-for="(item, index) in drawingDataFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)" class="attachment-item">{{ item.newVal }}</td>
+                  <td class="attachment-item">{{ item.oldVal }}</td>
+                </tr>
+              </template>
+              <template v-else-if="activeTab === 'settlement'">
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">招牌信息</td>
+                </tr>
+                <tr v-for="(item, index) in signboardFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">主招牌尺寸</td>
+                </tr>
+                <tr v-for="(size, idx) in detailData.settlement.signboard.sizes" :key="idx">
+                  <td>尺寸{{ idx + 1 }}</td>
+                  <td :class="getDiffClass(size.newVal, size.oldVal)">
+                    {{ size.newVal.length }} × {{ size.newVal.width }}m {{ size.newVal.isSpecial ? '(异形)' : '' }}
+                  </td>
+                  <td>{{ size.oldVal.length }} × {{ size.oldVal.width }}m {{ size.oldVal.isSpecial ? '(异形)' : '' }}</td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">广告位信息</td>
+                </tr>
+                <tr v-for="(item, index) in advertisementFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">橱窗灯箱</td>
+                </tr>
+                <tr v-for="(item, index) in showcaseFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+              </template>
+              <template v-else-if="activeTab === 'equipment'">
+                <tr v-for="(item, index) in equipmentFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+              </template>
+              <template v-else-if="activeTab === 'display'">
+                <tr v-for="(item, index) in displayFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ formatValue(item.newVal, item.type) }}</td>
+                  <td>{{ formatValue(item.oldVal, item.type) }}</td>
+                </tr>
+              </template>
+              <template v-else-if="activeTab === 'thirdParty'">
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">装修业务</td>
+                </tr>
+                <tr v-for="(item, index) in renovationFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ item.newVal }}</td>
+                  <td>{{ item.oldVal }}</td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">门窗业务</td>
+                </tr>
+                <tr v-for="(item, index) in doorWindowFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ item.newVal }}</td>
+                  <td>{{ item.oldVal }}</td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="font-weight: 500; color: #606266; background: #fafafa;">广告业务</td>
+                </tr>
+                <tr v-for="(item, index) in adFields" :key="index">
+                  <td>{{ item.label }}</td>
+                  <td :class="getDiffClass(item.newVal, item.oldVal)">{{ item.newVal }}</td>
+                  <td>{{ item.oldVal }}</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="card" style="height: fit-content;">
+          <div class="card-title">📝 审批流程</div>
+          <div class="timeline">
+            <div v-for="(item, index) in approvalFlow" :key="index" :class="['timeline-item', item.status]">
+              <div class="timeline-title">{{ item.title }}</div>
+              <div class="timeline-desc">{{ item.desc }}</div>
+              <div class="timeline-time">{{ item.time }}</div>
+              <div v-if="item.remark" style="margin-top: 4px;">
+                <div style="font-size: 12px; color: #909399; margin-bottom: 4px;">备注:</div>
+                <input type="text" :value="item.remark" readonly style="width: 100%; height: 36px; border-radius: 4px; border: 1px solid #e4e7ed; padding: 0 12px; background: #f5f7fa; font-size: 12px; color: #67C23A;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue
+
+    createApp({
+      setup() {
+        const activeTab = ref('space')
+
+        const compareTabs = [
+          { key: 'space', label: '空间数据' },
+          { key: 'drawing', label: '图纸数据' },
+          { key: 'settlement', label: '结算信息' },
+          { key: 'equipment', label: '门店设备' },
+          { key: 'display', label: '陈列数据' },
+          { key: 'thirdParty', label: '第三方公司' }
+        ]
+
+        const detailData = ref({
+          projectName: '赣州瑞金市丽丰中心店',
+          status: '已完成',
+          basicInfo: {
+            submitter: '刘俊',
+            engineeringNode: '项目管理',
+            reason: '根据实际测量数据更新门店基础信息，调整营业面积及层高数据',
+            attachments: [
+              { name: '门店测量报告.pdf', size: '2.3MB' },
+              { name: '现场照片.zip', size: '15.6MB' }
+            ]
+          },
+          spaceData: {
+            storeVersion: { newVal: 'V3.0', oldVal: 'V2.0' },
+            businessArea: { newVal: 120.5, oldVal: 110.2 },
+            hasWarehouse: { newVal: '是', oldVal: '否' },
+            shopArea: { newVal: 25.5, oldVal: 20.0 },
+            structureHeight: { newVal: 3.8, oldVal: 3.5 },
+            roomLength: { newVal: 15.2, oldVal: 14.8 },
+            finishHeight: { newVal: 3.2, oldVal: 3.0 }
+          },
+          settlement: {
+            signboard: {
+              material: { newVal: '铝塑板', oldVal: '亚克力' },
+              isCorner: { newVal: '是', oldVal: '否' },
+              totalArea: { newVal: 18.5, oldVal: 15.2 },
+              hasSubSign: { newVal: '是', oldVal: '否' },
+              hasElectricEyes: { newVal: '是', oldVal: '否' },
+              sizes: [
+                { newVal: { length: 8.5, width: 1.2, isSpecial: false }, oldVal: { length: 7.0, width: 1.0, isSpecial: false } },
+                { newVal: { length: 0, width: 0, isSpecial: true, area: 3.5 }, oldVal: { length: 0, width: 0, isSpecial: false } }
+              ]
+            },
+            advertisement: {
+              hasHighAd: { newVal: '是', oldVal: '否' },
+              totalArea: { newVal: 8.0, oldVal: 0 },
+              sizes: []
+            },
+            showcase: {
+              hasShowcase: { newVal: '是', oldVal: '是' },
+              totalArea: { newVal: 12.5, oldVal: 10.0 }
+            }
+          },
+          storeEquipment: {
+            freezer2Door: { newVal: 2, oldVal: 2 },
+            freezer3Door: { newVal: 1, oldVal: 1 },
+            drink2Door: { newVal: 3, oldVal: 2 },
+            drink3Door: { newVal: 1, oldVal: 1 },
+            curtain125: { newVal: 1, oldVal: 1 },
+            curtain190: { newVal: 2, oldVal: 1 },
+            curtain250: { newVal: 1, oldVal: 0 },
+            arc140: { newVal: 1, oldVal: 1 },
+            arc160: { newVal: 1, oldVal: 0 },
+            arc180: { newVal: 1, oldVal: 1 },
+            arc200: { newVal: 1, oldVal: 1 },
+            cashier: { newVal: 2, oldVal: 2 },
+            hasFoodArea: { newVal: '是', oldVal: '否' },
+            hasCashierWall: { newVal: '否', oldVal: '否' },
+            sausageMachine: { newVal: 1, oldVal: 0 },
+            tartMachine: { newVal: 1, oldVal: 0 }
+          },
+          displayData: {
+            snackBoxCount: { newVal: 120, oldVal: 100 },
+            floorStackMeters: { newVal: 8.5, oldVal: 6.0 },
+            packageMeters: { newVal: 12.3, oldVal: 10.0 },
+            endCount: { newVal: 4, oldVal: 3 },
+            flags: { newVal: 6, oldVal: 4 }
+          },
+          thirdParty: {
+            renovation: { renovationMethod: { newVal: '第三方公司', oldVal: '第三方公司' }, companyName: { newVal: '江西华匠装饰', oldVal: '江西华匠装饰' } },
+            doorWindow: { renovationMethod: { newVal: '第三方公司', oldVal: '第三方公司' }, companyName: { newVal: '苏州阿尔泰', oldVal: '上海建装' } },
+            advertisement: { renovationMethod: { newVal: '第三方公司', oldVal: '加盟商自装' }, companyName: { newVal: '上海建装', oldVal: '' } }
+          }
+        })
+
+        const spaceDataFields = computed(() => [
+          { label: '门店版本', newVal: detailData.value.spaceData.storeVersion.newVal, oldVal: detailData.value.spaceData.storeVersion.oldVal, type: 'text' },
+          { label: '营业面积(m²)', newVal: detailData.value.spaceData.businessArea.newVal, oldVal: detailData.value.spaceData.businessArea.oldVal, type: 'number' },
+          { label: '店铺面积(m²)', newVal: detailData.value.spaceData.shopArea.newVal, oldVal: detailData.value.spaceData.shopArea.oldVal, type: 'number' },
+          { label: '结构层高(m)', newVal: detailData.value.spaceData.structureHeight.newVal, oldVal: detailData.value.spaceData.structureHeight.oldVal, type: 'number' },
+          { label: '完成面层高(m)', newVal: detailData.value.spaceData.finishHeight.newVal, oldVal: detailData.value.spaceData.finishHeight.oldVal, type: 'number' },
+          { label: '开间长度(m)', newVal: detailData.value.spaceData.roomLength.newVal, oldVal: detailData.value.spaceData.roomLength.oldVal, type: 'number' },
+          { label: '是否有仓库', newVal: detailData.value.spaceData.hasWarehouse.newVal, oldVal: detailData.value.spaceData.hasWarehouse.oldVal, type: 'text' },
+          { label: '仓库面积(m²)', newVal: detailData.value.spaceData.shopArea.newVal, oldVal: detailData.value.spaceData.shopArea.oldVal, type: 'number' }
+        ])
+
+        const drawingDataFields = computed(() => [
+          { label: '平面图文件', newVal: 'floor_plan.dwg', oldVal: 'old_floor_plan.dwg' },
+          { label: '平面图附件', newVal: 'floor_plan.pdf', oldVal: '-' },
+          { label: '水电图文件', newVal: 'water_electric.dwg', oldVal: 'old_water_electric.dwg' },
+          { label: '水电图附件', newVal: 'water_electric.pdf', oldVal: 'water_electric_old.pdf' },
+          { label: '全套图文件', newVal: 'full_set.dwg', oldVal: 'old_full_set.dwg' },
+          { label: '全套图附件', newVal: 'full_set.pdf', oldVal: '-' },
+          { label: '下单图文件', newVal: 'order_plan.dwg', oldVal: 'old_order_plan.dwg' },
+          { label: '下单图附件', newVal: 'order_plan.pdf', oldVal: 'order_plan_old.pdf' }
+        ])
+
+        const signboardFields = computed(() => [
+          { label: '招牌材质', newVal: detailData.value.settlement.signboard.material.newVal, oldVal: detailData.value.settlement.signboard.material.oldVal, type: 'text' },
+          { label: '招牌是否为拐角', newVal: detailData.value.settlement.signboard.isCorner.newVal, oldVal: detailData.value.settlement.signboard.isCorner.oldVal, type: 'text' },
+          { label: '招牌总面积(m²)', newVal: detailData.value.settlement.signboard.totalArea.newVal, oldVal: detailData.value.settlement.signboard.totalArea.oldVal, type: 'number' },
+          { label: '是否有副招牌', newVal: detailData.value.settlement.signboard.hasSubSign.newVal, oldVal: detailData.value.settlement.signboard.hasSubSign.oldVal, type: 'text' },
+          { label: '电动眼睛', newVal: detailData.value.settlement.signboard.hasElectricEyes.newVal, oldVal: detailData.value.settlement.signboard.hasElectricEyes.oldVal, type: 'text' }
+        ])
+
+        const advertisementFields = computed(() => [
+          { label: '是否有高空广告位', newVal: detailData.value.settlement.advertisement.hasHighAd.newVal, oldVal: detailData.value.settlement.advertisement.hasHighAd.oldVal, type: 'text' },
+          { label: '广告位总面积(m²)', newVal: detailData.value.settlement.advertisement.totalArea.newVal, oldVal: detailData.value.settlement.advertisement.totalArea.oldVal, type: 'number' }
+        ])
+
+        const showcaseFields = computed(() => [
+          { label: '是否有橱窗灯箱', newVal: detailData.value.settlement.showcase.hasShowcase.newVal, oldVal: detailData.value.settlement.showcase.hasShowcase.oldVal, type: 'text' },
+          { label: '橱窗灯箱总面积(m²)', newVal: detailData.value.settlement.showcase.totalArea.newVal, oldVal: detailData.value.settlement.showcase.totalArea.oldVal, type: 'number' }
+        ])
+
+        const equipmentFields = computed(() => [
+          { label: '冻柜两门数量(台)', newVal: detailData.value.storeEquipment.freezer2Door.newVal, oldVal: detailData.value.storeEquipment.freezer2Door.oldVal, type: 'integer' },
+          { label: '冻柜三门数量(台)', newVal: detailData.value.storeEquipment.freezer3Door.newVal, oldVal: detailData.value.storeEquipment.freezer3Door.oldVal, type: 'integer' },
+          { label: '水饮柜两门数量(台)', newVal: detailData.value.storeEquipment.drink2Door.newVal, oldVal: detailData.value.storeEquipment.drink2Door.oldVal, type: 'integer' },
+          { label: '水饮柜三门数量(台)', newVal: detailData.value.storeEquipment.drink3Door.newVal, oldVal: detailData.value.storeEquipment.drink3Door.oldVal, type: 'integer' },
+          { label: '风幕柜1.25米数量(台)', newVal: detailData.value.storeEquipment.curtain125.newVal, oldVal: detailData.value.storeEquipment.curtain125.oldVal, type: 'integer' },
+          { label: '风幕柜1.9米数量(台)', newVal: detailData.value.storeEquipment.curtain190.newVal, oldVal: detailData.value.storeEquipment.curtain190.oldVal, type: 'integer' },
+          { label: '风幕柜2.5米数量(台)', newVal: detailData.value.storeEquipment.curtain250.newVal, oldVal: detailData.value.storeEquipment.curtain250.oldVal, type: 'integer' },
+          { label: '1.4米弧形透视窗冰柜(台)', newVal: detailData.value.storeEquipment.arc140.newVal, oldVal: detailData.value.storeEquipment.arc140.oldVal, type: 'integer' },
+          { label: '1.6米弧形透视窗端头冰柜(台)', newVal: detailData.value.storeEquipment.arc160.newVal, oldVal: detailData.value.storeEquipment.arc160.oldVal, type: 'integer' },
+          { label: '1.8米弧形透视窗冰柜(台)', newVal: detailData.value.storeEquipment.arc180.newVal, oldVal: detailData.value.storeEquipment.arc180.oldVal, type: 'integer' },
+          { label: '2米弧形透视窗冰柜(台)', newVal: detailData.value.storeEquipment.arc200.newVal, oldVal: detailData.value.storeEquipment.arc200.oldVal, type: 'integer' },
+          { label: '收银台数量(台)', newVal: detailData.value.storeEquipment.cashier.newVal, oldVal: detailData.value.storeEquipment.cashier.oldVal, type: 'integer' },
+          { label: '是否有熟食区', newVal: detailData.value.storeEquipment.hasFoodArea.newVal, oldVal: detailData.value.storeEquipment.hasFoodArea.oldVal, type: 'text' },
+          { label: '是否有3.0收银背景墙', newVal: detailData.value.storeEquipment.hasCashierWall.newVal, oldVal: detailData.value.storeEquipment.hasCashierWall.oldVal, type: 'text' },
+          { label: '烤肠机数量(台)', newVal: detailData.value.storeEquipment.sausageMachine.newVal, oldVal: detailData.value.storeEquipment.sausageMachine.oldVal, type: 'integer' },
+          { label: '蛋挞烘焙机数量(台)', newVal: detailData.value.storeEquipment.tartMachine.newVal, oldVal: detailData.value.storeEquipment.tartMachine.oldVal, type: 'integer' }
+        ])
+
+        const displayFields = computed(() => [
+          { label: '零食盒总数(个)', newVal: detailData.value.displayData.snackBoxCount.newVal, oldVal: detailData.value.displayData.snackBoxCount.oldVal, type: 'integer' },
+          { label: '地堆米数(m)', newVal: detailData.value.displayData.floorStackMeters.newVal, oldVal: detailData.value.displayData.floorStackMeters.oldVal, type: 'number' },
+          { label: '包装米数(m)', newVal: detailData.value.displayData.packageMeters.newVal, oldVal: detailData.value.displayData.packageMeters.oldVal, type: 'number' },
+          { label: '端头数量(个)', newVal: detailData.value.displayData.endCount.newVal, oldVal: detailData.value.displayData.endCount.oldVal, type: 'integer' },
+          { label: '门店吊旗(个)', newVal: detailData.value.displayData.flags.newVal, oldVal: detailData.value.displayData.flags.oldVal, type: 'integer' }
+        ])
+
+        const renovationFields = computed(() => [
+          { label: '装修方式', newVal: detailData.value.thirdParty.renovation.renovationMethod.newVal, oldVal: detailData.value.thirdParty.renovation.renovationMethod.oldVal },
+          { label: '公司名称', newVal: detailData.value.thirdParty.renovation.companyName.newVal, oldVal: detailData.value.thirdParty.renovation.companyName.oldVal }
+        ])
+
+        const doorWindowFields = computed(() => [
+          { label: '装修方式', newVal: detailData.value.thirdParty.doorWindow.renovationMethod.newVal, oldVal: detailData.value.thirdParty.doorWindow.renovationMethod.oldVal },
+          { label: '公司名称', newVal: detailData.value.thirdParty.doorWindow.companyName.newVal, oldVal: detailData.value.thirdParty.doorWindow.companyName.oldVal }
+        ])
+
+        const adFields = computed(() => [
+          { label: '装修方式', newVal: detailData.value.thirdParty.advertisement.renovationMethod.newVal, oldVal: detailData.value.thirdParty.advertisement.renovationMethod.oldVal },
+          { label: '公司名称', newVal: detailData.value.thirdParty.advertisement.companyName.newVal, oldVal: detailData.value.thirdParty.advertisement.companyName.oldVal }
+        ])
+
+        const approvalFlow = ref([
+          { title: '发起流程', desc: '申请人：刘俊', time: '2026-04-30 08:59:59', status: 'done' },
+          { title: '审核通过', desc: '系统自动通过', time: '2026-04-30 08:59:59', status: 'done', remark: '历史档案免审' }
+        ])
+
+        const formatValue = (val, type) => {
+          if (val === null || val === undefined || val === '') return '-'
+          if (type === 'number') return val.toFixed(2)
+          if (type === 'integer') return val.toString()
+          return val
+        }
+
+        const getDiffClass = (newVal, oldVal) => {
+          if (newVal === oldVal) return ''
+          if (typeof newVal === 'number' && typeof oldVal === 'number') {
+            if (newVal > oldVal) return 'diff-increase diff-highlight'
+            return 'diff-decrease diff-highlight'
+          }
+          return 'diff-highlight'
+        }
+
+        const goBack = () => {
+          window.location.href = 'archive-update.html'
+        }
+
+        return {
+          activeTab,
+          compareTabs,
+          detailData,
+          spaceDataFields,
+          drawingDataFields,
+          signboardFields,
+          advertisementFields,
+          showcaseFields,
+          equipmentFields,
+          displayFields,
+          renovationFields,
+          doorWindowFields,
+          adFields,
+          approvalFlow,
+          formatValue,
+          getDiffClass,
+          goBack
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
